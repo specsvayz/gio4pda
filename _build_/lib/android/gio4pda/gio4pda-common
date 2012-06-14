@@ -3,7 +3,7 @@
 export LIBDIR='/usr/local/lib/android/gio4pda'
 export HOMEDIR='/var/local/googlecode'
 export LOCALDIR="$HOMEDIR/repository"
-export WORKDIR="HOMEDIR/tmp"
+export WORKDIR="$HOMEDIR/tmp"
 
 
 if [ ! -f $HOMEDIR/.googlecode ]; then

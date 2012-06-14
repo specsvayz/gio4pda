@@ -2,7 +2,7 @@
 
 source /etc/environment
 
-source /var/local/googlecode/tools/gio4pda/gio4pda-common
+source /usr/local/lib/android/gio4pda/gio4pda-common
 
 BACK="$CWD"
 
