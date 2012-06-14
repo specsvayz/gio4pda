@@ -2,7 +2,12 @@
 
 source /etc/environment
 
-source /usr/local/lib/android/gio4pda/gio4pda-common
+if [ -z "$LIBDIR" ]; then
+    echo "LIBDIR is not set!"
+    exit 1
+fi
+
+source $LIBDIR/gio4pda-common
 
 
 echo '[gio4pda] Updating links'

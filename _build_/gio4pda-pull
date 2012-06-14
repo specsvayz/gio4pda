@@ -1,0 +1,30 @@
+#!/bin/bash
+
+source /etc/environment
+
+export HOMEDIR='/var/local/googlecode'
+
+export BINDIR="$HOMEDIR/repository/gio4pda/_build_/bin"
+export LIBDIR="$HOMEDIR/repository/gio4pda/_build_/lib/android/gio4pda"
+
+export PATH=${HOMEDIR}/bin:${BINDIR}:${PATH}
+
+####################################
+
+BACK="$CWD"
+
+cd "$GIO4PDA_LOCAL"
+
+export LC_ALL=C
+
+HGPULL="$(hg pull)"
+
+TOUPDATE="$(echo $HGPULL | grep 'no changes found')"
+
+if [[ -z "$TOUPDATE" ]]; then
+    hg update
+else
+    echo 'Nothing changed...'
+fi
+
+cd "$BACK"

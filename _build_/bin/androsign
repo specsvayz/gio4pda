@@ -1,5 +1,5 @@
 #!/bin/sh
 
-/usr/local/lib/android/androsign $@
+/var/local/googlecode/repository/gio4pda/_build_/lib/android/androsign $@
 
 exit 0;

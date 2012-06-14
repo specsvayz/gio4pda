@@ -1,0 +1,18 @@
+#!/bin/bash
+
+source /etc/environment
+
+export HOMEDIR='/var/local/googlecode'
+
+export BINDIR="$HOMEDIR/repository/gio4pda/_build_/bin"
+export LIBDIR="$HOMEDIR/repository/gio4pda/_build_/lib/android/gio4pda"
+
+export PATH=${HOMEDIR}/bin:${BINDIR}:${PATH}
+
+####################################
+
+echo '[gio4pda] Получение *.apk'
+$LIBDIR/gio4pda-dev/gio4pda-dev-sync
+
+echo '[gio4pda] Выгрузка пакетов'
+$LIBDIR/gio4pda/gio4pda-push

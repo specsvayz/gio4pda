@@ -1,6 +1,10 @@
 #!/bin/bash
 
-export LIBDIR='/usr/local/lib/android/gio4pda'
+if [ -z "$LIBDIR" ]; then
+    echo "LIBDIR is not set!"
+    exit 1
+fi
+
 export HOMEDIR='/var/local/googlecode'
 export LOCALDIR="$HOMEDIR/repository"
 export WORKDIR="$HOMEDIR/tmp"
@@ -135,13 +139,8 @@ fi
 
 
 if [ "$DIE" == '1' ]; then
-    if [ "$AUTOINST" == '1' ]; then
-        echo "GIO4PDA: Installing $TOINST..."
-        apt-get install -y $TOINST
-    else
-        echo "GIO4PDA: You could fix this with < apt-get install $TOINST >"
-        exit 1
-    fi
+    echo "GIO4PDA: You could fix this with < apt-get install $TOINST >"
+    exit 1
 fi
 }
 
