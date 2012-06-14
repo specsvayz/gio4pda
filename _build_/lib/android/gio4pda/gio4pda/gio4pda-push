@@ -1,0 +1,28 @@
+#!/bin/bash
+
+source /etc/environment
+
+source /usr/local/lib/android/gio4pda/gio4pda-common
+
+BACK="$CWD"
+
+cd "$GIO4PDA_LOCAL"
+
+if [ -n "$(hg addremove)" ]; then
+    hg commit -m "Build system's changes & fixes..."
+fi
+
+export LC_ALL=C
+
+HGPUSH="$(hg push)"
+
+TOBUILD="$(echo $HGPUSH | grep 'no changes found')"
+
+if [[ -z "$TOBUILD" ]]; then
+    echo 'Changes were pushed to googlecode'
+    $GIO4PDA_WIKI/gio4pda.wiki-sync
+else
+    echo 'Nothing changed...'
+fi
+
+cd "$BACK"

@@ -1,0 +1,52 @@
+#!/bin/bash
+
+source /etc/environment
+
+source /usr/local/lib/android/gio4pda/gio4pda-common
+
+
+BACK="$CWD"
+
+####################################################
+
+OLD_IFS=$IFS
+export IFS=$'\n';
+
+####################################################
+
+cd "$GIO4PDA_DEV_LOCAL"
+
+####################################################
+svn update --username $SVN_USERNAME --password $SVN_PASSWORD
+####################################################
+
+APKS="$(ls "$GIO4PDA_DEV_LOCAL" | grep -i -v 'branches' | grep -i -v 'tags' | grep -i -v 'wiki' | grep -i -v 'trunk')"
+
+for APK in $APKS; do
+    svn move "$APK" "$GIO4PDA_DEV_TRUNK/$APK"
+done
+
+####################################################
+
+cd "$GIO4PDA_DEV_TRUNK"
+APKS="$(ls $GIO4PDA_DEV_TRUNK)"
+
+####################################################
+$GIO4PDA_DEV/gio4pda-dev-update
+####################################################
+
+for APK in $APKS; do
+    svn remove "$GIO4PDA_DEV_TRUNK/$APK"
+done
+
+####################################################
+
+cd "$GIO4PDA_DEV_LOCAL"
+svn cleanup
+
+####################################################
+svn commit --username $SVN_USERNAME --password $SVN_PASSWORD -m "Downloaded & cleaned. Packages will arrive in 'gio4pda' someday..." > /dev/null
+####################################################
+
+cd $BACK
+export IFS=$OLD_IFS

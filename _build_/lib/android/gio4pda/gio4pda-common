@@ -1,0 +1,150 @@
+#!/bin/bash
+
+export LIBDIR='/usr/local/lib/android/gio4pda'
+export HOMEDIR='/var/local/googlecode'
+export LOCALDIR="$HOMEDIR/repository"
+export WORKDIR="HOMEDIR/tmp"
+
+
+if [ ! -f $HOMEDIR/.googlecode ]; then
+    echo "No config <.googlecode> in home dir"
+    exit 1
+else
+    source $HOMEDIR/.googlecode
+fi
+
+export LC_ALL=ru_RU.UTF-8
+export LC_MESSAGES=C
+
+export DATE=$(date +%Y%m%d-%H%M%S)
+
+#################################################################################################################
+
+# GIO4PDA
+export GIO4PDA="$LIBDIR/gio4pda"
+export GIO4PDA_BINARY="$GIO4PDA/update-binary"
+
+export GIO4PDA_LOCAL="$LOCALDIR/gio4pda"
+export GIO4PDA_OUTPUT_AP="$GIO4PDA_LOCAL/apks"
+export GIO4PDA_OUTPUT_UP="$GIO4PDA_LOCAL/packages"
+export GIO4PDA_OUTPUT_RM="$GIO4PDA_LOCAL/removers"
+export GIO4PDA_RENAME="$GIO4PDA_LOCAL/configs/rename.list"
+
+export GIO4PDA_TMP="$WORKDIR/gio4pda"
+export GIO4PDA_SCRIPT="$GIO4PDA_TMP/META-INF/com/google/android/updater-script"
+
+export GETAPKINFO="$GIO4PDA_LOCAL/_build_/bin/getapkinfo"
+
+#################################################################################################################
+
+# GIO4PDA.WIKI
+export GIO4PDA_WIKI="$LIBDIR/gio4pda.wiki"
+export GIO4PDA_WIKI_TEMPLATE="$GIO4PDA_WIKI/wiki"
+export GIO4PDA_WIKI_HEADER="$GIO4PDA_WIKI_TEMPLATE/Downloads.header"
+export GIO4PDA_WIKI_FOOTER="$GIO4PDA_WIKI_TEMPLATE/Downloads.footer"
+
+export GIO4PDA_WIKI_LOCAL="$LOCALDIR/gio4pda.wiki"
+export GIO4PDA_WIKI_DESCRIPTION="$GIO4PDA_WIKI_LOCAL/Downloads.wiki"
+
+export GIO4PDA_WIKI_MARKET_LINK='https://market.android.com/details?id='
+export GIO4PDA_WIKI_UPDATE_LINK='http://gio4pda.googlecode.com/hg/packages'
+export GIO4PDA_WIKI_REMOVE_LINK='http://gio4pda.googlecode.com/hg/removers'
+export GIO4PDA_WIKI_APK_LINK='http://gio4pda.googlecode.com/hg/apks'
+export GIO4PDA_WIKI_PDA_LINK='http://www.google.ru/search?btnI&sitesearch=http://4pda.ru/forum/index.php?showtopic=112220&q='
+
+export GIO4PDA_WIKI_TMP="$WORKDIR/gio4pda-wiki"
+
+#################################################################################################################
+
+# gio4pda-dev-sync
+export GIO4PDA_DEV="$LIBDIR/gio4pda-dev"
+
+export GIO4PDA_DEV_LOCAL="$LOCALDIR/gio4pda-dev"
+export GIO4PDA_DEV_TRUNK="$GIO4PDA_DEV_LOCAL/trunk"
+
+#################################################################################################################
+
+function rename_apk
+{
+    IN_NAME="$($GETAPKINFO $APK | cut -s -d ' ' -f 1)"
+    IN_BUILD="$($GETAPKINFO $APK | cut -s -d ' ' -f 2)"
+
+    if [ -f $GIO4PDA_RENAME ]; then
+        NEW_NAME="$(cat "$GIO4PDA_RENAME" | grep -v '#' | grep "$IN_NAME" | cut -s -d '@' -f 2)"
+        if [ -z "$NEW_NAME" ]; then
+            NEW_NAME="$IN_NAME"
+        fi
+    else
+        NEW_NAME="$IN_NAME"
+    fi
+
+    APK="$NEW_NAME.apk"
+}
+
+function rename_update
+{
+    DST_NAME=$(echo $SRC_NAME | uniconv -encode Russian-Translit | sed -e 's/\ /_/g' | sed -e 's/+/_/g' | sed -e 's/"/_/g' | sed -e "s/'/_/g")
+}
+
+function check_requirements
+{
+TOINST=''
+if [ -z "$(which java)" ]; then
+    echo "GIO4PDA: Java is not installed."
+    TOINST="$TOINST default-jre-headless"
+    DIE='1'
+fi
+if [ -z "$(which zip)" ]; then
+    echo "GIO4PDA: Zip is not installed."
+    TOINST="$TOINST zip"
+    DIE='1'
+fi
+if [ -z "$(which hg)" ]; then
+    echo "GIO4PDA: Mercurial is not installed."
+    TOINST="$TOINST mercurial"
+    DIE='1'
+fi
+if [ -z "$(which svn)" ]; then
+    echo "GIO4PDA: Subversion is not installed."
+    TOINST="$TOINST subversion"
+    DIE='1'
+fi
+if [ -z "$(which uniconv)" ]; then
+    echo "GIO4PDA: Yudit is not installed."
+    TOINST="$TOINST yudit"
+    DIE='1'
+fi
+
+if [ -z "$(which aapt)" ]; then
+    echo "GIO4PDA: <aapt> is not linked in PATH"
+    DIE='1'
+fi
+if [ -z "$(which getapkinfo)" ]; then
+    echo "GIO4PDA: <getapkinfo> is not linked in PATH"
+    DIE='1'
+fi
+if [ -z "$(which androsign)" ]; then
+    echo "GIO4PDA: <androsign> is not linked in PATH"
+    DIE='1'
+fi
+if [ -z "$(which apktool)" ]; then
+    echo "GIO4PDA: <apktool> is not linked in PATH"
+    DIE='1'
+fi
+
+
+
+if [ "$DIE" == '1' ]; then
+    if [ "$AUTOINST" == '1' ]; then
+        echo "GIO4PDA: Installing $TOINST..."
+        apt-get install -y $TOINST
+    else
+        echo "GIO4PDA: You could fix this with < apt-get install $TOINST >"
+        exit 1
+    fi
+fi
+}
+
+#################################################################################################################
+
+check_requirements

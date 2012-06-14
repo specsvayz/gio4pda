@@ -1,0 +1,25 @@
+#!/bin/bash
+
+source /etc/environment
+
+source /usr/local/lib/android/gio4pda/gio4pda-common
+
+
+BACK="$CWD"
+
+cd "$GIO4PDA_LOCAL"
+
+if [ -n "$1" ]; then
+    MESSAGE="$1"
+else
+    MESSAGE="$DATE"
+fi
+
+
+if [ -n "$(hg addremove)" ]; then
+    hg commit -m "$MESSAGE" > /dev/null
+else
+    echo "Nothing to commit :(";
+fi
+
+cd "$BACK"

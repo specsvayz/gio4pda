@@ -1,0 +1,5 @@
+#!/bin/sh
+
+/usr/local/lib/android/androsign $@
+
+exit 0;

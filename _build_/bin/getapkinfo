@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "No file selected!"
+    exit 1;
+else
+    APK="$1"
+fi
+
+###################################################################
+
+DATA="$(/usr/local/bin/aapt d badging $APK | grep 'package:')"
+
+for ITEM in $DATA; do
+    NAME="$(echo $ITEM | cut -s -d '=' -f 1)"
+    CONTENT="$(echo $ITEM | cut -s -d '=' -f 2-)"
+
+        if [ "$NAME" == 'name' ]; then
+            PACKAGE="$(echo $CONTENT | sed -e s/\'//g)"
+        fi
+
+        if [ "$NAME" == 'versionName' ]; then
+            VERSION="$(echo $CONTENT | sed -e s/\'//g)"
+        fi
+
+        if [ "$NAME" == 'versionCode' ]; then
+            VERSION_CODE="$(echo $CONTENT | sed -e s/\'//g)"
+        fi
+
+done
+
+###################################################################
+
+APP_NAME="$(/usr/local/bin/aapt d badging $APK | grep 'application:' | sed -e "s/label=/@/g" | sed -e "s/icon=/#/g" | cut -s -d '@' -f 2- | cut -s -d '#' -f 1 | sed -e "s/'//" | sed "s/\(.*\)'/\1@/" | cut -s -d '@' -f 1)"
+
+echo "$PACKAGE $VERSION_CODE $VERSION $APP_NAME"

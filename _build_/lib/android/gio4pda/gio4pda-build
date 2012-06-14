@@ -1,0 +1,156 @@
+#!/bin/bash
+
+source /etc/environment
+
+source /var/local/googlecode/tools/gio4pda/gio4pda-common
+
+BACK="$CWD"
+
+####################################################
+
+function make_updater_script
+{
+if [[ "$DO" == 'updater' ]]; then
+    HEADER="Updater: $APP_NAME $VERSION"
+    ACTION="ui_print(\"[i] Extracting package...\");\npackage_extract_file(\"system/app/$APK\", \"/system/app/$APK\");\nset_perm(0, 0, 644, \"/system/app/$APK\");"
+elif [[ "$DO" == 'remover' ]]; then
+    HEADER="Remover: $APP_NAME"
+    ACTION="ui_print(\"[i] Removing package...\");\ndelete(\"/system/app/$APK\");"
+else
+    echo "ERROR!!!"
+fi
+
+
+echo -e 'ui_print("--------------------");
+############################################################
+ui_print("'$HEADER'");
+############################################################
+ui_print("by gio4pda team");
+ui_print("http://is.gd/gio4pda");
+############################################################
+if is_mounted("/system") == ""
+    then
+        run_program("/sbin/setprop", "gio4pda.umount", "1");
+        ui_print("[ ] Mounting /system...");
+        mount("ext4", "EMMC", "/dev/block/stl12", "/system");
+        if is_mounted("/system") == ""
+            then
+                ui_print("[e] RFS detected...");
+                run_program("/sbin/mount", "-t", "rfs", "-o", "log_off,llw,relatime,check=no", "/dev/block/stl12", "/system");
+            else
+                ui_print("[e] EXT4 detected...");
+        endif;
+endif;
+############################################################
+'$ACTION'
+############################################################
+if getprop("gio4pda.umount") == "1"
+    then
+        ui_print("[i] Unmounting /system...");
+        run_program("/sbin/sync");
+        unmount("/system");
+        run_program("/sbin/setprop", "gio4pda.umount", "0");
+endif;
+############################################################
+ui_print("--------------------");' > $GIO4PDA_SCRIPT
+}
+
+####################################################
+
+if [[ ! -d "$GIO4PDA_OUTPUT_AP" ]]; then mkdir -p $GIO4PDA_OUTPUT_AP; fi
+if [[ ! -d "$GIO4PDA_OUTPUT_UP" ]]; then mkdir -p $GIO4PDA_OUTPUT_UP; fi
+if [[ ! -d "$GIO4PDA_OUTPUT_RM" ]]; then mkdir -p $GIO4PDA_OUTPUT_RM; fi
+
+####################################################
+
+function make_update_zip
+{
+    if [[ -d "$GIO4PDA_TMP" ]]; then rm -r $GIO4PDA_TMP; fi
+    mkdir -p $GIO4PDA_TMP
+
+    mkdir -p $GIO4PDA_TMP/META-INF/com/google/android
+    cp $GIO4PDA_BINARY $GIO4PDA_TMP/META-INF/com/google/android
+
+    mkdir -p $GIO4PDA_TMP/system/app
+    cp $GIO4PDA_OUTPUT_AP/$APK $GIO4PDA_TMP/system/app
+
+    cd $GIO4PDA_TMP/system/app
+
+    VERSION="$($GETAPKINFO $GIO4PDA_OUTPUT_AP/$APK | cut -s -d ' ' -f 3)"
+
+    APP_NAME="$($GETAPKINFO $GIO4PDA_OUTPUT_AP/$APK | cut -s -d ' ' -f 4-)"
+
+#
+    SRC_NAME=$APP_NAME
+    rename_update
+    APP=$DST_NAME
+#
+
+    if [[ -z "$VERSION" ]]; then VERSION="$DATE"; fi
+
+    DO='updater'
+    make_updater_script
+
+    cd $GIO4PDA_TMP
+    zip $APP-$VERSION.zip -rm META-INF/ system/
+    androsign $APP-$VERSION.zip
+    rm $APP-$VERSION.zip
+
+    rm $GIO4PDA_OUTPUT_UP/$APP-*
+    mv $APP-$VERSION-signed.zip $GIO4PDA_OUTPUT_UP/$APP-$VERSION.zip
+
+    ##############################
+
+    if [[ -d "$GIO4PDA_TMP" ]]; then rm -r $GIO4PDA_TMP; fi
+    mkdir -p $GIO4PDA_TMP
+
+    mkdir -p $GIO4PDA_TMP/META-INF/com/google/android
+    cp $GIO4PDA_BINARY $GIO4PDA_TMP/META-INF/com/google/android
+
+    DO='remover'
+    make_updater_script
+
+    cd $GIO4PDA_TMP
+    zip $APP-remover.zip -rm META-INF/
+    androsign $APP-remover.zip
+    rm $APP-remover.zip
+
+    rm $GIO4PDA_OUTPUT_RM/$APP-*
+    mv $APP-remover-signed.zip $GIO4PDA_OUTPUT_RM/$APP-remover.zip
+
+    ##############################
+
+    $GIO4PDA/gio4pda-commit "$APP_NAME: $VERSION"
+
+    rm -r $GIO4PDA_TMP
+
+    cd $BACK
+}
+
+
+####################################################
+
+if [ -n "$1" ]; then
+    APK="$(basename $1)"
+
+    OLD_APK="$APK"
+
+    rename_apk
+
+    if [ -f "$GIO4PDA_OUTPUT_AP/$APK" ]; then
+        OUT_VER="$($GETAPKINFO "$GIO4PDA_OUTPUT_AP/$APK" | cut -s -d ' ' -f 2)"
+    else
+        OUT_VER='0'
+    fi
+
+    if [[ "$IN_BUILD" > "$OUT_VER" ]]; then
+        VERSION="upgrading $OUT_VER -> $IN_BUILD"
+        cp -f "$OLD_APK" "$GIO4PDA_OUTPUT_AP/$APK"
+        make_update_zip
+    else
+        VERSION="keeping $OUT_VER"
+    fi
+
+fi
+
+#  -e modify -e close_write -e create 

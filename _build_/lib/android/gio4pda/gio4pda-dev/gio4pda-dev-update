@@ -1,0 +1,44 @@
+#!/bin/bash
+
+source /etc/environment
+
+source /usr/local/lib/android/gio4pda/gio4pda-common
+
+
+BACK="$CWD"
+
+####################################################
+
+OLD_IFS=$IFS
+
+export IFS=$'\n';
+
+####################################################
+
+
+APKS="$(ls $GIO4PDA_DEV_TRUNK | grep -i '.apk')"
+
+for APK in $APKS; do
+
+    OUT="$(echo $APK | sed -e 's/\ /_/g' | sed -e 's/+/_/g')"
+    if [[ "x$OUT" != "x$APK" ]]; then
+        echo "$APK > $OUT"
+        mv "$GIO4PDA_DEV_TRUNK/$APK" "$GIO4PDA_DEV_TRUNK/$OUT"
+    fi
+
+done
+
+
+
+APKS="$(ls $GIO4PDA_DEV_TRUNK | grep -i '.apk')"
+
+for APK in $APKS; do
+
+    "$LIBDIR/gio4pda-build" "$APK"
+    rm -f "$APK"
+
+done
+
+####################################################
+
+export IFS=$OLD_IFS

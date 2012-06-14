@@ -1,0 +1,59 @@
+#!/bin/bash
+
+source /etc/environment
+
+source /usr/local/lib/android/gio4pda/gio4pda-common
+
+BACK="$CWD"
+
+OLD_IFS=$IFS
+export IFS=$'\n';
+
+#######################################################3
+
+if [[ ! -d $GIO4PDA_WIKI_TMP ]]; then mkdir -p $GIO4PDA_WIKI_TMP; else rm -rf $GIO4PDA_WIKI_TMP; mkdir -p $GIO4PDA_WIKI_TMP; fi
+
+APKS="$(ls $GIO4PDA_OUTPUT_AP)"
+
+for APK in $APKS; do
+
+    PACKAGE=''
+    BUILD=''
+    VER=''
+    NAME=''
+
+    ###
+
+    PACKAGE="$($GETAPKINFO $GIO4PDA_OUTPUT_AP/$APK | cut -s -d ' ' -f 1)"
+    BUILD="$($GETAPKINFO $GIO4PDA_OUTPUT_AP/$APK | cut -s -d ' ' -f 2)"
+    VERSION="$($GETAPKINFO $GIO4PDA_OUTPUT_AP/$APK | cut -s -d ' ' -f 3)"
+    NAME="$($GETAPKINFO $GIO4PDA_OUTPUT_AP/$APK | cut -s -d ' ' -f 4-)"
+
+#
+    SRC_NAME=$NAME
+    rename_update
+    MAIN_NAME=$DST_NAME
+#
+
+    PACKAGE_LINK="$MAIN_NAME-$VERSION.zip"
+    RM_LINK="$MAIN_NAME-remover.zip"
+
+    SEARCH_NAME="$(echo "$NAME" | sed -e 's/\ /+/g')+android"
+
+    echo "|| *[$GIO4PDA_WIKI_UPDATE_LINK/$PACKAGE_LINK $NAME]* || [$GIO4PDA_WIKI_REMOVE_LINK/$RM_LINK RM] || *$VERSION* || [$GIO4PDA_WIKI_APK_LINK/$APK A] || [$GIO4PDA_WIKI_PDA_LINK$SEARCH_NAME 4] || [$GIO4PDA_WIKI_MARKET_LINK$PACKAGE M] ||" > $GIO4PDA_WIKI_TMP/$SEARCH_NAME
+
+done
+
+
+cat "$GIO4PDA_WIKI_HEADER" > "$GIO4PDA_WIKI_DESCRIPTION"
+
+DESCS="$(ls -1 $GIO4PDA_WIKI_TMP | sort)"
+
+for DESC in $DESCS; do
+    cat "$GIO4PDA_WIKI_TMP/$DESC" >> "$GIO4PDA_WIKI_DESCRIPTION"
+done
+
+cat "$GIO4PDA_WIKI_FOOTER" >> "$GIO4PDA_WIKI_DESCRIPTION"
+
+rm -rf $GIO4PDA_WIKI_TMP
+export IFS=$OLD_IFS

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+source /etc/environment
+
+source /usr/local/lib/android/gio4pda/gio4pda-common
+
+
+echo '[gio4pda] Updating links'
+BACK="$CWD"
+cd $GIO4PDA_WIKI_LOCAL
+hg pull > /dev/null
+hg update > /dev/null
+####################################################
+$GIO4PDA_WIKI/gio4pda.wiki-update
+####################################################
+hg addremove > /dev/null
+hg commit -m "$DATE" > /dev/null
+hg push > /dev/null
+cd $BACK
+echo 'Changes were pushed to googlecode'
