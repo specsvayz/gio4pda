@@ -47,7 +47,7 @@ done
 ####################################################
 
 cd "$GIO4PDA_DEV_LOCAL"
-svn cleanup
+svn cleanup . --username $SVN_USERNAME --password $SVN_PASSWORD
 
 ####################################################
 svn commit --username $SVN_USERNAME --password $SVN_PASSWORD -m "Downloaded & cleaned. Packages will arrive in 'gio4pda' someday..." > /dev/null
