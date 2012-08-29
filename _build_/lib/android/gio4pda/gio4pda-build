@@ -149,7 +149,7 @@ if [ -n "$1" ]; then
         OUT_VER='0'
     fi
 
-    if [[ "$IN_BUILD" > "$OUT_VER" ]]; then
+    if [[ "$IN_BUILD" -ge "$OUT_VER" ]]; then
         VERSION="upgrading $OUT_VER -> $IN_BUILD"
         cp -f "$OLD_APK" "$GIO4PDA_OUTPUT_AP/$APK"
         make_update_zip
