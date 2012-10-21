@@ -1,0 +1,15 @@
+#!/bin/bash
+
+source /etc/environment
+
+export HOMEDIR=/var/local/googlecode
+
+export BINDIR=${HOMEDIR}/repository/gio4pda/_build_/bin
+export LIBDIR=${HOMEDIR}/repository/gio4pda/_build_/lib/android/gio4pda
+
+export PATH=${HOMEDIR}/bin:${BINDIR}:${PATH}
+
+####################################
+
+echo '[gio4pda] Перегенрация списка загрузок'
+$LIBDIR/gio4pda.wiki/gio4pda.wiki-sync
